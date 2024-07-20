@@ -23,26 +23,19 @@ welcome_message = """
 
 Mixture of Agents (MoA) is a novel approach that leverages the collective strengths of multiple LLMs to enhance performance, achieving state-of-the-art results. By employing a layered architecture where each layer comprises several LLM agents, MoA significantly outperforms GPT-4 Omni’s 57.5% on AlpacaEval 2.0 with a score of 65.1%, using only open-source models!
 
-This demo uses the following LLMs as reference models, then passes the results to the aggregate model for the final response:
-- Qwen/Qwen2-72B-Instruct
-- Qwen/Qwen1.5-72B-Chat
-- mistralai/Mixtral-8x22B-Instruct-v0.1
-- databricks/dbrx-instruct
 
 """
 
 default_reference_models = [
-    "Qwen/Qwen2-72B-Instruct",
-    "Qwen/Qwen1.5-72B-Chat",
-    "mistralai/Mixtral-8x22B-Instruct-v0.1",
-    "databricks/dbrx-instruct",
+    "gpt-4o",
+    "gpt-4o-mini",
 ]
 
 
 def process_fn(
     item,
     temperature=0.7,
-    max_tokens=2048,
+    max_tokens=4096,
 ):
     """
     Processes a single item (e.g., a conversational turn) using specified model parameters to generate a response.
@@ -83,10 +76,10 @@ def process_fn(
 
 
 def main(
-    model: str = "Qwen/Qwen2-72B-Instruct",
+    model: str = "gpt-4o",
     reference_models: list[str] = default_reference_models,
     temperature: float = 0.7,
-    max_tokens: int = 512,
+    max_tokens: int = 4096,
     rounds: int = 1,
     multi_turn=True,
 ):
@@ -118,7 +111,7 @@ def main(
 
     model = Prompt.ask(
         "\n1. What main model do you want to use?",
-        default="Qwen/Qwen2-72B-Instruct",
+        default="gpt-4o",
     )
     console.print(f"Selected {model}.", style="yellow italic")
     temperature = float(
@@ -131,8 +124,8 @@ def main(
     console.print(f"Selected {temperature}.", style="yellow italic")
     max_tokens = int(
         Prompt.ask(
-            "3. What max tokens do you want to use? [cyan bold](512) [/cyan bold]",
-            default=512,
+            "3. What max tokens do you want to use? [cyan bold](128000) [/cyan bold]",
+            default=4096,
             show_default=True,
         )
     )
@@ -199,8 +192,9 @@ def main(
 
         for chunk in output:
             out = chunk.choices[0].delta.content
-            console.print(out, end="")
-            all_output += out
+            if out is not None:
+                console.print(out, end="")
+                all_output += out
         print()
 
         if DEBUG:
